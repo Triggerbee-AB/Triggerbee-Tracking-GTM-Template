@@ -2,6 +2,8 @@ homepage: "https://www.triggerbee.com"
 documentation: "https://help.triggerbee.com/article/556-gtm-tracking"
 versions:
   # Latest version
+  - sha: dfeee013a11f6f8008445d1691b8ddc6b424eea1
+    changeNotes: Added read access to global keys mtr and triggerbee.widgets.api.init 
   - sha: d3be4a4757d5cc6591a41261377f99046685b6f8
     changeNotes: Added check and handling for duplicate scripts. Added additional console logging for debugging.
   - sha: 9576535e7249b07d2522f760dccaffcb754c2f42
