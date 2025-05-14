@@ -2,9 +2,11 @@ homepage: "https://www.triggerbee.com"
 documentation: "https://intercom.help/triggerbee-b22fa4ccd330/en/articles/11046805-install-with-google-tag-manager"
 versions:
   # Latest version
+  - sha: 262484613c80ff027b2041c2a32442e29bc1b9fe
+    changeNotes: Added toggle to turn on/off debugging in console
+  # Older versions
   - sha: 45d17d2e1afe7eb4c683bfd1175f9b43d9a2e38a
     changeNotes: Added read access to global keys mtr and triggerbee.widgets.api.init and updated the version number.
-  # Older versions
   - sha: d3be4a4757d5cc6591a41261377f99046685b6f8
     changeNotes: Added check and handling for duplicate scripts. Added additional console logging for debugging.
   - sha: 9576535e7249b07d2522f760dccaffcb754c2f42
