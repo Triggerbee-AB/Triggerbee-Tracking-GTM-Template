@@ -51,6 +51,14 @@ ___TEMPLATE_PARAMETERS___
     "checkboxText": "Send DataLayer event on successful script injection",
     "simpleValueType": true,
     "help": "By checking this box, an event called \"triggerbeeActive\" will be sent to the data layer along with the site ID and some domain parameters."
+  },
+  {
+    "type": "CHECKBOX",
+    "name": "enableDebugMode",
+    "checkboxText": "Enable Debug Mode",
+    "simpleValueType": true,
+    "help": "Enable debug mode to log detailed information to the console.",
+    "defaultValue": false
   }
 ]
 
@@ -67,22 +75,30 @@ const createQueue = require('createQueue');
 
 // Site ID from the template
 const siteId = data.siteId;
-logToConsole('Site ID:', siteId);
+
+// Enable/Disable debug mode based on the checkbox value
+const debugMode = data.enableDebugMode === true;
+
+function debugLog(msg) {
+  if (debugMode) {
+    logToConsole(msg);
+  }
+}
 
 // Setting mtr_site_id in the global window object
 setInWindow('mtr_site_id', siteId, true);
-logToConsole('Set mtr_site_id on window with value:', siteId);
+debugLog('Set mtr_site_id on window with value: ' + siteId);
 
 // Setting or copying mtr_custom object in the global window object
 setInWindow('mtr_custom', copyFromWindow('mtr_custom') || {}, true);
-logToConsole('Initialized mtr_custom on window.');
+debugLog('Initialized mtr_custom on window.');
 
 // URLs for the Triggerbee scripts
 const mainScriptUrl = '//t.myvisitors.se/js?site_id=' + siteId;
 const secondScriptUrl = '//t.myvisitors.se/js/' + siteId +
   (getUrl().indexOf('tb-nocache') > -1 ? '?v=' + generateRandom(0, 999) : '');
-logToConsole('Main script URL:', mainScriptUrl);
-logToConsole('Second script URL:', secondScriptUrl);
+debugLog('Main script URL: ' + mainScriptUrl);
+debugLog('Second script URL: ' + secondScriptUrl);
 
 // Helper function for logging errors and signaling failure
 const fail = function(msg) {
@@ -92,7 +108,7 @@ const fail = function(msg) {
 
 // Create DataLayer queue for pushing events
 const dataLayerPush = createQueue('dataLayer');
-logToConsole('DataLayer queue created.');
+debugLog('DataLayer queue created.');
 
 // Function to push the triggerbeeActive event to DataLayer
 const pushToDataLayer = function() {
@@ -104,50 +120,58 @@ const pushToDataLayer = function() {
       }
     };
     dataLayerPush(dlObj);
-    logToConsole('DataLayer event pushed:', dlObj);
+    debugLog('DataLayer event pushed: ' + formatObject(dlObj));
   } else {
-    logToConsole('DataLayer push is disabled (checkbox not enabled).');
+    debugLog('DataLayer push is disabled (checkbox not enabled).');
   }
 };
 
+// Function to format objects as strings for debugging
+function formatObject(obj) {
+  let formattedString = '';
+  for (let key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      formattedString += key + ": " + obj[key] + ", ";
+    }
+  }
+  return '{' + formattedString.slice(0, -2) + '}'; // Remove the last comma and space
+}
+
 // Check if Triggerbee script has already been loaded
 const isScriptInjected = function() {
-  // Check if `mtr` or Triggerbee's init function is already available in window
   const isLoaded = !!copyFromWindow('mtr') || !!copyFromWindow('triggerbee.widgets.api.init');
   if (isLoaded) {
-    logToConsole('Triggerbee script detected as already loaded, skipping injection.');
+    debugLog('Triggerbee script detected as already loaded, skipping injection.');
     return true;
   }
-  logToConsole('Triggerbee script not detected, proceeding with injection.');
+  debugLog('Triggerbee script not detected, proceeding with injection.');
   return false;
 };
 
 // Inject scripts if not already present
 if (!isScriptInjected()) {
-  // Inject the first Triggerbee script with cacheToken
   injectScript(mainScriptUrl, function() {
-    logToConsole('Triggerbee: Main script injected successfully:', mainScriptUrl);
+    debugLog('Triggerbee: Main script injected successfully: ' + mainScriptUrl);
 
-    // Inject the second Triggerbee script after the first one loads
     injectScript(secondScriptUrl, function() {
-      logToConsole('Triggerbee: Second script injected successfully:', secondScriptUrl);
+      debugLog('Triggerbee: Second script injected successfully: ' + secondScriptUrl);
 
-      // Push DataLayer event after both scripts are loaded
       pushToDataLayer();
       data.gtmOnSuccess();  // Signal successful execution
-      logToConsole('All scripts loaded successfully. GTM tag executed with success.');
+      debugLog('All scripts loaded successfully. GTM tag executed with success.');
 
     }, function() {
       fail('Triggerbee: Second script load failed.');
-    }, 'triggerbeeSecondScriptCache'); // Unique cacheToken for the second script
+    }, 'triggerbeeSecondScriptCache');  // Unique cacheToken for the second script
 
   }, function() {
     fail('Triggerbee: Main script load failed.');
-  }, 'triggerbeeMainScriptCache'); // Unique cacheToken for the main script
+  }, 'triggerbeeMainScriptCache');  // Unique cacheToken for the main script
 
 } else {
-  logToConsole('Skipping script injection due to existing Triggerbee script on the page.');
+  debugLog('Skipping script injection due to existing Triggerbee script on the page.');
 }
+
 
 
 ___WEB_PERMISSIONS___
@@ -694,3 +718,4 @@ setup: |-
 ___NOTES___
 
 Created on 24/10/2024, 14:23:28
+Updated on 14/05/2025, 13:12
